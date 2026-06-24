@@ -2,7 +2,9 @@ import "dart:async";
 import "package:flutter/material.dart";
 import "package:get/get.dart";
 import "package:sportsboard/core/utils/snackbar_utils.dart";
+import "package:sportsboard/domain/entities/sport.dart";
 import "package:sportsboard/domain/entities/tournament.dart";
+import "package:sportsboard/domain/repositories/sport_repository.dart";
 import "package:sportsboard/domain/usecases/tournament/create_tournament_usecase.dart";
 import "package:sportsboard/domain/usecases/tournament/get_tournaments_usecase.dart";
 
@@ -19,6 +21,10 @@ class TournamentController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
   StreamSubscription? _tournamentsSub;
+  StreamSubscription? _sportsSub;
+
+  final RxList<Sport> sports = <Sport>[].obs;
+  final Rxn<Sport> selectedSport = Rxn<Sport>();
 
   // Form Controllers
   final formKey = GlobalKey<FormState>();
@@ -28,13 +34,25 @@ class TournamentController extends GetxController {
   void onInit() {
     super.onInit();
     _loadTournaments();
+    _loadSports();
   }
 
   @override
   void onClose() {
     _tournamentsSub?.cancel();
+    _sportsSub?.cancel();
     nameController.dispose();
     super.onClose();
+  }
+
+  void _loadSports() {
+    _sportsSub?.cancel();
+    _sportsSub = Get.find<SportRepository>().getSports().listen((data) {
+      sports.value = data;
+      if (data.isNotEmpty && selectedSport.value == null) {
+        selectedSport.value = data.first;
+      }
+    });
   }
 
   void _loadTournaments({String? sportId}) {

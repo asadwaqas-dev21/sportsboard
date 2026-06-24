@@ -25,6 +25,8 @@ import "package:sportsboard/presentation/modules/admin/view/admin_dashboard_scre
 import "package:sportsboard/presentation/modules/sports/binding/admin_sports_binding.dart";
 import "package:sportsboard/presentation/modules/sports/view/admin_sports_screen.dart";
 import "package:sportsboard/presentation/modules/sports/view/sport_details_screen.dart";
+import "package:sportsboard/presentation/modules/tournament/binding/tournament_details_binding.dart";
+import "package:sportsboard/presentation/modules/tournament/view/tournament_details_screen.dart";
 
 abstract class AppPages {
   static final pages = [
@@ -92,6 +94,11 @@ abstract class AppPages {
       name: AppRoutes.sportDetails,
       page: () => const SportDetailsScreen(),
       binding: BindingsBuilder(() {}),
+    ),
+    GetPage(
+      name: AppRoutes.tournamentDetails,
+      page: () => const TournamentDetailsScreen(),
+      binding: TournamentDetailsBinding(),
     ),
   ];
 }

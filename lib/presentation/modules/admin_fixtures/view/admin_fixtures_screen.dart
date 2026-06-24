@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:get/get.dart";
+import "package:sportsboard/domain/entities/tournament.dart";
+import "package:sportsboard/domain/entities/team.dart";
 import "package:sportsboard/presentation/global_widgets/app_scaffold.dart";
 import "package:sportsboard/presentation/global_widgets/loading_widget.dart";
 import "package:sportsboard/presentation/global_widgets/match_card.dart";
@@ -13,23 +15,85 @@ class AdminFixturesScreen extends GetView<AdminFixturesController> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Add New Fixture"),
-        content: Form(
-          key: controller.formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: controller.teamANameController,
-                decoration: const InputDecoration(labelText: "Team A Name"),
-                validator: (v) => v!.isEmpty ? "Required" : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: controller.teamBNameController,
-                decoration: const InputDecoration(labelText: "Team B Name"),
-                validator: (v) => v!.isEmpty ? "Required" : null,
-              ),
-            ],
+        content: SingleChildScrollView(
+          child: Form(
+            key: controller.formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Obx(() {
+                  if (controller.tournaments.isEmpty) {
+                    return const Text(
+                      "Please add a Tournament first.",
+                      style: TextStyle(color: Colors.red, fontSize: 13),
+                    );
+                  }
+                  return DropdownButtonFormField<Tournament>(
+                    // ignore: deprecated_member_use
+                    value: controller.selectedTournament.value,
+                    decoration: const InputDecoration(labelText: "Select Tournament"),
+                    items: controller.tournaments
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(t.name),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      controller.selectedTournament.value = val;
+                    },
+                    validator: (val) => val == null ? "Required" : null,
+                  );
+                }),
+                const SizedBox(height: 16),
+                Obx(() {
+                  if (controller.teams.isEmpty) {
+                    return const Text(
+                      "Please add Teams first.",
+                      style: TextStyle(color: Colors.red, fontSize: 13),
+                    );
+                  }
+                  return DropdownButtonFormField<Team>(
+                    // ignore: deprecated_member_use
+                    value: controller.selectedTeamA.value,
+                    decoration: const InputDecoration(labelText: "Select Team A"),
+                    items: controller.teams
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(t.name),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      controller.selectedTeamA.value = val;
+                    },
+                    validator: (val) => val == null ? "Required" : null,
+                  );
+                }),
+                const SizedBox(height: 16),
+                Obx(() {
+                  if (controller.teams.isEmpty) {
+                    return const Text(
+                      "Please add Teams first.",
+                      style: TextStyle(color: Colors.red, fontSize: 13),
+                    );
+                  }
+                  return DropdownButtonFormField<Team>(
+                    // ignore: deprecated_member_use
+                    value: controller.selectedTeamB.value,
+                    decoration: const InputDecoration(labelText: "Select Team B"),
+                    items: controller.teams
+                        .map((t) => DropdownMenuItem(
+                              value: t,
+                              child: Text(t.name),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      controller.selectedTeamB.value = val;
+                    },
+                    validator: (val) => val == null ? "Required" : null,
+                  );
+                }),
+              ],
+            ),
           ),
         ),
         actions: [

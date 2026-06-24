@@ -1,215 +1,172 @@
 import "package:flutter/material.dart";
 import "package:get/get.dart";
-import "package:sportsboard/core/theme/app_colors.dart";
+import "package:iconsax/iconsax.dart";
+import "package:sportsboard/domain/entities/fixture.dart";
+import "package:sportsboard/domain/repositories/auth_repository.dart";
+import "package:sportsboard/presentation/global_widgets/empty_state.dart";
 import "package:sportsboard/presentation/global_widgets/loading_widget.dart";
+import "package:sportsboard/presentation/global_widgets/match_card.dart";
 import "package:sportsboard/presentation/modules/result/controller/result_controller.dart";
 
 class ResultsListScreen extends GetView<ResultController> {
   const ResultsListScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Expanded(
-            child: Obx(() {
-              if (controller.isLoading.value) {
-                return const Center(child: LoadingWidget());
-              }
-
-              if (controller.results.isEmpty) {
-                return const Center(
-                  child: Text(
-                    "No match results available right now.",
-                    style: TextStyle(color: Colors.black54, fontSize: 16),
-                  ),
-                );
-              }
-
-              return ListView.separated(
-                padding: const EdgeInsets.all(20),
-                itemCount: controller.results.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  final result = controller.results[index];
-                  return _buildSimpleResultCard(
-                    context,
-                    result.teamAName,
-                    result.teamBName,
-                    result.scoreSummary,
+  void _showAddResultDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Add Match Result"),
+        content: SingleChildScrollView(
+          child: Form(
+            key: controller.formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Obx(() {
+                  if (controller.fixtures.isEmpty) {
+                    return const Text(
+                      "Please add a Fixture first.",
+                      style: TextStyle(color: Colors.red, fontSize: 13),
+                    );
+                  }
+                  return DropdownButtonFormField<Fixture>(
+                    // ignore: deprecated_member_use
+                    value: controller.selectedFixture.value,
+                    decoration: const InputDecoration(labelText: "Select Fixture"),
+                    items: controller.fixtures
+                        .map((f) => DropdownMenuItem(
+                              value: f,
+                              child: Text("${f.teamAName} vs ${f.teamBName}"),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      controller.selectedFixture.value = val;
+                    },
+                    validator: (val) => val == null ? "Required" : null,
                   );
-                },
-              );
-            }),
+                }),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: controller.scoreSummaryController,
+                  decoration: const InputDecoration(
+                    labelText: "Score Summary (e.g. 2-1 or 150/4 - 148/8)",
+                  ),
+                  validator: (v) => v!.isEmpty ? "Required" : null,
+                ),
+                const SizedBox(height: 16),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "Winner Team:",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Obx(() {
+                  final fixture = controller.selectedFixture.value;
+                  if (fixture == null) {
+                    return const Text("Select a fixture first");
+                  }
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: ChoiceChip(
+                          label: Text(fixture.teamAName),
+                          selected: controller.isTeamAWinner.value,
+                          onSelected: (val) {
+                            if (val) controller.isTeamAWinner.value = true;
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: Text(fixture.teamBName),
+                          selected: !controller.isTeamAWinner.value,
+                          onSelected: (val) {
+                            if (val) controller.isTeamAWinner.value = false;
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text("Cancel"),
+          ),
+          Obx(
+            () => controller.isSaving.value
+                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator())
+                : ElevatedButton(
+                    onPressed: () => controller.addResult(),
+                    child: const Text("Save"),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSimpleResultCard(
-    BuildContext context,
-    String teamA,
-    String teamB,
-    String score,
-  ) {
-    // Attempting to parse score for UI display
-    final parts = score.split("-").map((e) => e.trim()).toList();
-    final scoreA = parts.isNotEmpty ? parts[0] : "0";
-    final scoreB = parts.length > 1 ? parts[1] : "0";
+  @override
+  Widget build(BuildContext context) {
+    final canPop = ModalRoute.of(context)?.canPop ?? false;
+    final isAdmin = Get.find<AuthRepository>().isLoggedIn;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.15)),
-      ),
-      child: Column(
-        children: [
-          // Header / Date
-          Text(
-            "Match Result",
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 16),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: canPop
+          ? AppBar(
+              title: const Text("Results"),
+              centerTitle: false,
+            )
+          : null,
+      floatingActionButton: isAdmin
+          ? FloatingActionButton(
+              onPressed: () => _showAddResultDialog(context),
+              child: const Icon(Icons.add),
+            )
+          : null,
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const ListLoadingWidget(count: 5, itemHeight: 160);
+        }
 
-          // Teams and Score
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Team A
-              Expanded(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          teamA.isNotEmpty ? teamA[0].toUpperCase() : "?",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      teamA,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: Colors.black87,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+        if (controller.results.isEmpty) {
+          return const EmptyState(
+            title: "No Results Yet",
+            subtitle: "Match results will appear here.",
+            icon: Iconsax.chart_1,
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          itemCount: controller.results.length,
+          itemBuilder: (context, index) {
+            final r = controller.results[index];
+            return MatchCard(
+              fixture: Fixture(
+                id: r.fixtureId,
+                tournamentId: r.tournamentId,
+                teamAId: "",
+                teamBId: "",
+                teamAName: r.teamAName,
+                teamBName: r.teamBName,
+                status: "completed",
+                date: r.createdAt,
               ),
-
-              // Score
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    Text(
-                      "$scoreA - $scoreB",
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.accent,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Team B
-              Expanded(
-                child: Column(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          teamB.isNotEmpty ? teamB[0].toUpperCase() : "?",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.warning,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      teamB,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                        color: Colors.black87,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // Winner Footer
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              "$teamA won this match 🎉",
-              style: const TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
-          ),
-        ],
-      ),
+              scoreSummary: r.scoreSummary,
+              onTap: () {},
+            );
+          },
+        );
+      }),
     );
   }
 }

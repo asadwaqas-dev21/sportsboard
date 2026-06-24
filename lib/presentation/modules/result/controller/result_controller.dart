@@ -1,8 +1,9 @@
 import "dart:async";
 import "package:get/get.dart";
 import "package:sportsboard/domain/entities/result.dart";
+import "package:sportsboard/domain/entities/fixture.dart";
+import "package:sportsboard/domain/repositories/fixture_repository.dart";
 import "package:sportsboard/domain/usecases/result/get_results_usecase.dart";
-
 import "package:sportsboard/domain/usecases/result/create_result_usecase.dart";
 import "package:sportsboard/core/utils/snackbar_utils.dart";
 import "package:flutter/material.dart";
@@ -19,23 +20,43 @@ class ResultController extends GetxController {
   final RxList<Result> results = <Result>[].obs;
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
+  
   StreamSubscription? _resultsSub;
+  StreamSubscription? _fixturesSub;
+
+  final RxList<Fixture> fixtures = <Fixture>[].obs;
+  final Rxn<Fixture> selectedFixture = Rxn<Fixture>();
+  final RxBool isTeamAWinner = true.obs;
 
   final formKey = GlobalKey<FormState>();
-  final teamANameController = TextEditingController();
-  final teamBNameController = TextEditingController();
   final scoreSummaryController = TextEditingController();
+
+  @override
+  void onInit() {
+    super.onInit();
+    loadResults();
+    _loadFixtures();
+  }
 
   @override
   void onClose() {
     _resultsSub?.cancel();
-    teamANameController.dispose();
-    teamBNameController.dispose();
+    _fixturesSub?.cancel();
     scoreSummaryController.dispose();
     super.onClose();
   }
 
-  void loadResults(String tournamentId) {
+  void _loadFixtures() {
+    _fixturesSub?.cancel();
+    _fixturesSub = Get.find<FixtureRepository>().getFixtures().listen((data) {
+      fixtures.value = data;
+      if (data.isNotEmpty && selectedFixture.value == null) {
+        selectedFixture.value = data.first;
+      }
+    });
+  }
+
+  void loadResults({String? tournamentId}) {
     isLoading.value = true;
     _resultsSub?.cancel();
     _resultsSub = getResultsUseCase.execute(tournamentId: tournamentId).listen((
@@ -47,21 +68,31 @@ class ResultController extends GetxController {
   }
 
   Future<void> addResult() async {
+    final fixture = selectedFixture.value;
+    if (fixture == null) {
+      SnackbarUtils.showError("Please select a fixture");
+      return;
+    }
     if (!formKey.currentState!.validate()) return;
 
     isSaving.value = true;
     try {
+      final winner = isTeamAWinner.value ? fixture.teamAId : fixture.teamBId;
+      final loser = isTeamAWinner.value ? fixture.teamBId : fixture.teamAId;
+
       final result = Result(
         id: "",
-        fixtureId: "demo_fixture",
-        tournamentId: "demo_tournament",
-        sportType: "football",
-        teamAName: teamANameController.text.trim(),
-        teamBName: teamBNameController.text.trim(),
-        winnerTeamId: "team_a", // Placeholder
-        loserTeamId: "team_b", // Placeholder
+        fixtureId: fixture.id,
+        tournamentId: fixture.tournamentId,
+        sportType: "football", // fallback, or can be derived if sport details existed
+        teamAName: fixture.teamAName,
+        teamBName: fixture.teamBName,
+        winnerTeamId: winner,
+        loserTeamId: loser,
         scoreSummary: scoreSummaryController.text.trim(),
-        resultText: "${teamANameController.text.trim()} won",
+        resultText: isTeamAWinner.value 
+            ? "${fixture.teamAName} won" 
+            : "${fixture.teamBName} won",
         addedBy: "admin",
         createdAt: DateTime.now(),
       );
@@ -70,9 +101,6 @@ class ResultController extends GetxController {
 
       Get.back();
       SnackbarUtils.showSuccess("Result added successfully");
-
-      teamANameController.clear();
-      teamBNameController.clear();
       scoreSummaryController.clear();
     } catch (e) {
       SnackbarUtils.showError(e.toString());

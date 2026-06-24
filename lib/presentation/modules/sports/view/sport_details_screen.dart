@@ -3,6 +3,8 @@ import "package:get/get.dart";
 import "package:iconsax/iconsax.dart";
 import "package:sportsboard/core/theme/app_colors.dart";
 import "package:sportsboard/domain/entities/sport.dart";
+import "package:sportsboard/domain/usecases/tournament/get_tournaments_usecase.dart";
+import "package:sportsboard/presentation/modules/sports/controller/sport_details_controller.dart";
 
 class SportDetailsScreen extends StatelessWidget {
   const SportDetailsScreen({super.key});
@@ -18,6 +20,15 @@ class SportDetailsScreen extends StatelessWidget {
         body: const Center(child: Text("Sport details not found. Please go back.")),
       );
     }
+
+    // Initialize controller dynamically for this sportId
+    final controller = Get.put(
+      SportDetailsController(
+        getTournamentsUseCase: Get.find<GetTournamentsUseCase>(),
+        sportId: sport.id,
+      ),
+      tag: sport.id,
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -46,9 +57,9 @@ class SportDetailsScreen extends StatelessWidget {
             Container(
               width: double.infinity,
               height: 200,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: const BorderRadius.only(
+                borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(32),
                   bottomRight: Radius.circular(32),
                 ),
@@ -112,43 +123,124 @@ class SportDetailsScreen extends StatelessWidget {
                   
                   const SizedBox(height: 32),
                   
-                  // Empty state for tournaments
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Iconsax.cup,
-                          size: 48,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "No Active Tournaments",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "There are currently no active tournaments for ${sport.name}.",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
+                  const Text(
+                    "Tournaments",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  Obx(() {
+                    if (controller.isLoading.value) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+
+                    if (controller.tournaments.isEmpty) {
+                      return Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Iconsax.cup,
+                              size: 48,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "No Active Tournaments",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "There are currently no active tournaments for ${sport.name}.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return Column(
+                      children: [
+                        for (final tournament in controller.tournaments) ...[
+                          Card(
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: Colors.grey.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Iconsax.cup,
+                                  color: AppColors.primary,
+                                  size: 24,
+                                ),
+                              ),
+                              title: Text(
+                                tournament.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              subtitle: Text(
+                                "Status: ${tournament.status.toUpperCase()}",
+                                style: TextStyle(
+                                  color: tournament.status == "active"
+                                      ? Colors.green
+                                      : Colors.grey,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              trailing: const Icon(
+                                Icons.chevron_right,
+                                color: Colors.grey,
+                              ),
+                              onTap: () {
+                                // Navigate to standings/fixtures/details for tournament
+                              },
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  }),
                 ],
               ),
             ),

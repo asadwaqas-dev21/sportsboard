@@ -1,5 +1,7 @@
 import "package:flutter/material.dart";
 import "package:get/get.dart";
+import "package:sportsboard/app/routes/app_routes.dart";
+import "package:sportsboard/domain/entities/tournament.dart";
 import "package:sportsboard/presentation/global_widgets/app_scaffold.dart";
 import "package:sportsboard/presentation/global_widgets/loading_widget.dart";
 import "package:sportsboard/presentation/global_widgets/team_tile.dart";
@@ -9,8 +11,6 @@ class TeamsListScreen extends GetView<TeamController> {
   const TeamsListScreen({super.key});
 
   void _showAddTeamDialog(BuildContext context) {
-    final tournamentId = "demo_tournament_id"; // Placeholder
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -30,6 +30,30 @@ class TeamsListScreen extends GetView<TeamController> {
                 controller: controller.captainNameController,
                 decoration: const InputDecoration(labelText: "Captain Name"),
               ),
+              const SizedBox(height: 16),
+              Obx(() {
+                if (controller.tournaments.isEmpty) {
+                  return const Text(
+                    "Please add a Tournament first.",
+                    style: TextStyle(color: Colors.red, fontSize: 13),
+                  );
+                }
+                return DropdownButtonFormField<Tournament>(
+                  // ignore: deprecated_member_use
+                  value: controller.selectedTournament.value,
+                  decoration: const InputDecoration(labelText: "Select Tournament"),
+                  items: controller.tournaments
+                      .map((t) => DropdownMenuItem(
+                            value: t,
+                            child: Text(t.name),
+                          ))
+                      .toList(),
+                  onChanged: (val) {
+                    controller.selectedTournament.value = val;
+                  },
+                  validator: (val) => val == null ? "Required" : null,
+                );
+              }),
             ],
           ),
         ),
@@ -42,7 +66,14 @@ class TeamsListScreen extends GetView<TeamController> {
             () => controller.isSaving.value
                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator())
                 : ElevatedButton(
-                    onPressed: () => controller.saveTeam(tournamentId),
+                    onPressed: () {
+                      final selected = controller.selectedTournament.value;
+                      if (selected != null) {
+                        controller.saveTeam(selected.id);
+                      } else {
+                        Get.snackbar("Error", "Please select a tournament");
+                      }
+                    },
                     child: const Text("Add"),
                   ),
           ),
@@ -79,7 +110,7 @@ class TeamsListScreen extends GetView<TeamController> {
               child: TeamTile(
                 team: controller.teams[index],
                 onTap: () {
-                  // View players
+                  Get.toNamed(AppRoutes.players, arguments: controller.teams[index]);
                 },
               ),
             );

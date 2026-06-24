@@ -20,7 +20,6 @@ class HomeScreen extends GetView<HomeController> {
 
     return Obx(() {
       final index = controller.currentIndex.value;
-      final isLargeScreen = MediaQuery.of(context).size.width >= 768;
 
       // Determine main body content
       final Widget mainContent;
@@ -55,26 +54,12 @@ class HomeScreen extends GetView<HomeController> {
         );
       }
 
-      if (isLargeScreen) {
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: appBar,
-          body: Row(
-            children: [
-              _buildNavigationRail(context),
-              const VerticalDivider(width: 1, thickness: 1),
-              Expanded(child: SafeArea(child: mainContent)),
-            ],
-          ),
-        );
-      } else {
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: appBar,
-          body: SafeArea(child: mainContent),
-          bottomNavigationBar: _buildBottomNav(context),
-        );
-      }
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: appBar,
+        body: SafeArea(child: mainContent),
+        bottomNavigationBar: _buildBottomNav(context),
+      );
     });
   }
 
@@ -125,40 +110,6 @@ class HomeScreen extends GetView<HomeController> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildNavigationRail(BuildContext context) {
-    return NavigationRail(
-      selectedIndex: controller.currentIndex.value,
-      onDestinationSelected: controller.changePage,
-      destinations: const [
-        NavigationRailDestination(
-          icon: Icon(Iconsax.home),
-          selectedIcon: Icon(Iconsax.home_15),
-          label: Text("Home"),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Iconsax.category),
-          selectedIcon: Icon(Iconsax.category5),
-          label: Text("Sports"),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Iconsax.calendar_1),
-          selectedIcon: Icon(Iconsax.calendar5),
-          label: Text("Fixtures"),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Iconsax.chart_1),
-          selectedIcon: Icon(Iconsax.chart_15),
-          label: Text("Results"),
-        ),
-        NavigationRailDestination(
-          icon: Icon(Iconsax.setting_2),
-          selectedIcon: Icon(Iconsax.setting_21),
-          label: Text("Settings"),
-        ),
-      ],
     );
   }
 

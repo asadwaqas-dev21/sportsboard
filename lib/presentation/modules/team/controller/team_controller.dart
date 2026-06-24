@@ -3,7 +3,9 @@ import "package:flutter/material.dart";
 import "package:get/get.dart";
 import "package:sportsboard/core/utils/snackbar_utils.dart";
 import "package:sportsboard/domain/entities/team.dart";
+import "package:sportsboard/domain/entities/tournament.dart";
 import "package:sportsboard/domain/repositories/team_repository.dart";
+import "package:sportsboard/domain/repositories/tournament_repository.dart";
 
 class TeamController extends GetxController {
   final TeamRepository teamRepository;
@@ -14,20 +16,42 @@ class TeamController extends GetxController {
   final RxBool isLoading = true.obs;
   final RxBool isSaving = false.obs;
   StreamSubscription? _teamsSub;
+  StreamSubscription? _tournamentsSub;
+
+  final RxList<Tournament> tournaments = <Tournament>[].obs;
+  final Rxn<Tournament> selectedTournament = Rxn<Tournament>();
 
   final formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final captainNameController = TextEditingController();
 
   @override
+  void onInit() {
+    super.onInit();
+    loadTeams();
+    _loadTournaments();
+  }
+
+  @override
   void onClose() {
     _teamsSub?.cancel();
+    _tournamentsSub?.cancel();
     nameController.dispose();
     captainNameController.dispose();
     super.onClose();
   }
 
-  void loadTeams(String tournamentId) {
+  void _loadTournaments() {
+    _tournamentsSub?.cancel();
+    _tournamentsSub = Get.find<TournamentRepository>().getTournaments().listen((data) {
+      tournaments.value = data;
+      if (data.isNotEmpty && selectedTournament.value == null) {
+        selectedTournament.value = data.first;
+      }
+    });
+  }
+
+  void loadTeams({String? tournamentId}) {
     isLoading.value = true;
     _teamsSub?.cancel();
     _teamsSub = teamRepository.getTeams(tournamentId: tournamentId).listen((data) {
