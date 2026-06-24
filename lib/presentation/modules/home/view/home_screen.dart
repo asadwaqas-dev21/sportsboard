@@ -2,7 +2,6 @@ import "package:flutter/material.dart";
 import "package:get/get.dart";
 import "package:iconsax/iconsax.dart";
 import "package:sportsboard/app/routes/app_routes.dart";
-
 import "package:sportsboard/domain/repositories/auth_repository.dart";
 import "package:sportsboard/presentation/modules/home/controller/home_controller.dart";
 import "package:sportsboard/presentation/modules/home/view/widgets/home_dashboard.dart";
@@ -10,6 +9,8 @@ import "package:sportsboard/presentation/modules/sports/view/sports_screen.dart"
 import "package:sportsboard/presentation/modules/fixtures/view/fixtures_screen.dart";
 import "package:sportsboard/presentation/modules/result/view/results_list_screen.dart";
 import "package:sportsboard/presentation/modules/settings/view/settings_screen.dart";
+
+const _titles = ["SportsBoard", "Sports", "Fixtures", "Results", "Settings"];
 
 class HomeScreen extends GetView<HomeController> {
   const HomeScreen({super.key});
@@ -21,110 +22,69 @@ class HomeScreen extends GetView<HomeController> {
     return Obx(() {
       final index = controller.currentIndex.value;
 
-      // Determine main body content
-      final Widget mainContent;
-      if (index == 0) {
-        mainContent = const HomeDashboard();
-      } else {
-        mainContent = IndexedStack(
-          index: index - 1,
-          children: const [
-            SportsScreen(),
-            FixturesScreen(),
-            ResultsListScreen(),
-            SettingsScreen(),
-          ],
-        );
-      }
-
-      // Determine appBar
-      PreferredSizeWidget? appBar;
-      if (index > 0) {
-        appBar = AppBar(
-          title: Text(_getTitle(index)),
-          centerTitle: false,
-          automaticallyImplyLeading: false,
-          actions: [
-            if (isAdmin)
-              IconButton(
-                icon: const Icon(Icons.admin_panel_settings),
-                onPressed: () => Get.toNamed(AppRoutes.adminDashboard),
-              ),
-          ],
-        );
-      }
-
       return Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        appBar: appBar,
-        body: SafeArea(child: mainContent),
-        bottomNavigationBar: _buildBottomNav(context),
+        appBar: index == 0
+            ? null
+            : AppBar(
+                title: Text(_titles[index]),
+                centerTitle: false,
+                automaticallyImplyLeading: false,
+                actions: [
+                  if (isAdmin)
+                    IconButton(
+                      icon: const Icon(Icons.admin_panel_settings_outlined),
+                      onPressed: () => Get.toNamed(AppRoutes.adminDashboard),
+                    ),
+                ],
+              ),
+        body: SafeArea(
+          child: index == 0
+              ? const HomeDashboard()
+              : IndexedStack(
+                  index: index - 1,
+                  children: const [
+                    SportsScreen(),
+                    FixturesScreen(),
+                    ResultsListScreen(),
+                    SettingsScreen(),
+                  ],
+                ),
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: index,
+          onTap: controller.changePage,
+          type: BottomNavigationBarType.fixed,
+          selectedFontSize: 11,
+          unselectedFontSize: 11,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Iconsax.home),
+              activeIcon: Icon(Iconsax.home_15),
+              label: "Home",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Iconsax.category),
+              activeIcon: Icon(Iconsax.category5),
+              label: "Sports",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Iconsax.calendar_1),
+              activeIcon: Icon(Iconsax.calendar5),
+              label: "Fixtures",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Iconsax.chart_1),
+              activeIcon: Icon(Iconsax.chart_15),
+              label: "Results",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Iconsax.setting_2),
+              activeIcon: Icon(Iconsax.setting_21),
+              label: "Settings",
+            ),
+          ],
+        ),
       );
     });
-  }
-
-  Widget _buildBottomNav(BuildContext context) {
-    final theme = Theme.of(context);
-    final navBarBgColor =
-        theme.navigationBarTheme.backgroundColor ?? theme.colorScheme.surface;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: navBarBgColor,
-        border: Border(
-          top: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.1),
-            width: 1,
-          ),
-        ),
-      ),
-      child: NavigationBar(
-        elevation: 0,
-        selectedIndex: controller.currentIndex.value,
-        onDestinationSelected: controller.changePage,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Iconsax.home),
-            selectedIcon: Icon(Iconsax.home_15),
-            label: "Home",
-          ),
-          NavigationDestination(
-            icon: Icon(Iconsax.category),
-            selectedIcon: Icon(Iconsax.category5),
-            label: "Sports",
-          ),
-          NavigationDestination(
-            icon: Icon(Iconsax.calendar_1),
-            selectedIcon: Icon(Iconsax.calendar5),
-            label: "Fixtures",
-          ),
-          NavigationDestination(
-            icon: Icon(Iconsax.chart_1),
-            selectedIcon: Icon(Iconsax.chart_15),
-            label: "Results",
-          ),
-          NavigationDestination(
-            icon: Icon(Iconsax.setting_2),
-            selectedIcon: Icon(Iconsax.setting_21),
-            label: "Settings",
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getTitle(int index) {
-    switch (index) {
-      case 1:
-        return "Sports";
-      case 2:
-        return "Fixtures";
-      case 3:
-        return "Results";
-      case 4:
-        return "Settings";
-      default:
-        return "SportsBoard";
-    }
   }
 }

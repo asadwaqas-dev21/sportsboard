@@ -16,14 +16,18 @@ class TournamentRepositoryImpl implements TournamentRepository {
 
   @override
   Stream<List<Tournament>> getTournaments({String? sportId}) {
-    Query query = _collection.orderBy("name");
+    Query query = _collection;
     if (sportId != null && sportId.isNotEmpty) {
       query = query.where("sportId", isEqualTo: sportId);
     }
     return query.snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => TournamentModel.fromFirestore(doc))
-              .toList(),
+          (snapshot) {
+            final list = snapshot.docs
+                .map((doc) => TournamentModel.fromFirestore(doc))
+                .toList();
+            list.sort((a, b) => a.name.compareTo(b.name));
+            return list;
+          },
         );
   }
 

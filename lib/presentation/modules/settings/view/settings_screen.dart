@@ -33,6 +33,7 @@ class SettingsScreen extends StatelessWidget {
         children: [
           _buildSectionTitle("App Settings"),
           _buildMenuItem(
+            context,
             icon: Iconsax.setting_2,
             label: "Theme Settings",
             subtitle: themeController.isDarkMode ? "Dark" : "Light",
@@ -41,11 +42,13 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 24),
           _buildSectionTitle("Information"),
           _buildMenuItem(
+            context,
             icon: Iconsax.info_circle,
             label: "About UniSports",
             onTap: () {},
           ),
           _buildMenuItem(
+            context,
             icon: Iconsax.message_question,
             label: "Help & Support",
             onTap: () {},
@@ -54,11 +57,13 @@ class SettingsScreen extends StatelessWidget {
           _buildSectionTitle("Administration"),
           if (authRepository.isLoggedIn) ...[
             _buildMenuItem(
+              context,
               icon: Iconsax.category,
               label: "Admin Dashboard",
               onTap: () => Get.toNamed(AppRoutes.adminDashboard),
             ),
             _buildMenuItem(
+              context,
               icon: Iconsax.logout,
               label: "Logout",
               isDestructive: true,
@@ -76,6 +81,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ] else
             _buildMenuItem(
+              context,
               icon: Iconsax.login,
               label: "Admin Login",
               onTap: () => Get.toNamed(AppRoutes.login),
@@ -103,14 +109,17 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildMenuItem(
+    BuildContext context, {
     required IconData icon,
     required String label,
     String? subtitle,
     bool isDestructive = false,
     required VoidCallback onTap,
   }) {
-    final color = isDestructive ? Colors.red : Colors.black87;
+    final color = isDestructive
+        ? Colors.red
+        : Theme.of(context).colorScheme.onSurface;
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(

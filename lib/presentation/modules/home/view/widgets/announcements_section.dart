@@ -26,7 +26,7 @@ class AnnouncementsSection extends StatelessWidget {
                 child: Text(
                   "View all",
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppColors.primary,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                 ),
@@ -37,9 +37,9 @@ class AnnouncementsSection extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardTheme.color ?? Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.dividerLight),
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
             ),
             child: Row(
               children: [
@@ -73,7 +73,7 @@ class AnnouncementsSection extends StatelessWidget {
                         "Registrations open now! Be a part of the biggest sporting event!",
                         style:
                             Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondaryLight,
+                                  color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                                 ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,

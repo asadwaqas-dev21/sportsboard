@@ -1,9 +1,15 @@
 import "package:flutter/material.dart";
 import "package:get/get.dart";
 import "package:iconsax/iconsax.dart";
+import "package:sportsboard/app/routes/app_routes.dart";
 import "package:sportsboard/core/theme/app_colors.dart";
+import "package:sportsboard/core/utils/date_utils.dart";
 import "package:sportsboard/domain/entities/sport.dart";
+import "package:sportsboard/domain/entities/tournament.dart";
 import "package:sportsboard/domain/usecases/tournament/get_tournaments_usecase.dart";
+import "package:sportsboard/presentation/global_widgets/empty_state.dart";
+import "package:sportsboard/presentation/global_widgets/loading_widget.dart";
+import "package:sportsboard/presentation/global_widgets/status_chip.dart";
 import "package:sportsboard/presentation/modules/sports/controller/sport_details_controller.dart";
 
 class SportDetailsScreen extends StatelessWidget {
@@ -11,17 +17,15 @@ class SportDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Retrieve the passed Sport object safely
     final Sport? sport = Get.arguments as Sport?;
     if (sport == null) {
-      // If arguments are lost (e.g., on web refresh), fallback gracefully
       return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(title: const Text("Error")),
-        body: const Center(child: Text("Sport details not found. Please go back.")),
+        body: const Center(child: Text("Sport not found. Please go back.")),
       );
     }
 
-    // Initialize controller dynamically for this sportId
     final controller = Get.put(
       SportDetailsController(
         getTournamentsUseCase: Get.find<GetTournamentsUseCase>(),
@@ -31,223 +35,184 @@ class SportDetailsScreen extends StatelessWidget {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          sport.name,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.back(),
-        ),
+        title: Text(sport.name),
+        centerTitle: false,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const ListLoadingWidget(count: 4, itemHeight: 80);
+        }
+
+        final tournaments = controller.tournaments;
+        final active = tournaments.where((t) => t.status == "active").length;
+        final completed = tournaments.where((t) => t.status == "completed").length;
+
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           children: [
-            // Header Image/Icon Section
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.sports_soccer, // Placeholder generic icon
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      sport.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            _StatsRow(
+              total: tournaments.length,
+              active: active,
+              completed: completed,
             ),
-            
-            const SizedBox(height: 32),
-
-            // Content Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Overview",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+            const SizedBox(height: 24),
+            if (tournaments.isEmpty)
+              const EmptyState(
+                title: "No Tournaments",
+                subtitle: "No tournaments have been created for this sport yet.",
+                icon: Iconsax.cup,
+              )
+            else ...[
+              Text(
+                "TOURNAMENTS",
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.2,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Welcome to the official page for ${sport.name}. Here you can find all tournaments, fixtures, and recent results related to this sport.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                      height: 1.5,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  const Text(
-                    "Tournaments",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Obx(() {
-                    if (controller.isLoading.value) {
-                      return const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24.0),
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
-
-                    if (controller.tournaments.isEmpty) {
-                      return Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(32),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Iconsax.cup,
-                              size: 48,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              "No Active Tournaments",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[800],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "There are currently no active tournaments for ${sport.name}.",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    return Column(
-                      children: [
-                        for (final tournament in controller.tournaments) ...[
-                          Card(
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(
-                                color: Colors.grey.withValues(alpha: 0.1),
-                              ),
-                            ),
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Iconsax.cup,
-                                  color: AppColors.primary,
-                                  size: 24,
-                                ),
-                              ),
-                              title: Text(
-                                tournament.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              subtitle: Text(
-                                "Status: ${tournament.status.toUpperCase()}",
-                                style: TextStyle(
-                                  color: tournament.status == "active"
-                                      ? Colors.green
-                                      : Colors.grey,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              trailing: const Icon(
-                                Icons.chevron_right,
-                                color: Colors.grey,
-                              ),
-                              onTap: () {
-                                // Navigate to standings/fixtures/details for tournament
-                              },
-                            ),
-                          ),
-                        ],
-                      ],
-                    );
-                  }),
-                ],
               ),
-            ),
-            const SizedBox(height: 40),
+              const SizedBox(height: 10),
+              for (final t in tournaments) _TournamentCard(tournament: t),
+            ],
           ],
+        );
+      }),
+    );
+  }
+}
+
+// ── Stats Row ────────────────────────────────────────────────────────────────
+
+class _StatsRow extends StatelessWidget {
+  final int total;
+  final int active;
+  final int completed;
+
+  const _StatsRow({
+    required this.total,
+    required this.active,
+    required this.completed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _StatBox(label: "Total", value: "$total")),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _StatBox(label: "Active", value: "$active", highlight: true),
         ),
+        const SizedBox(width: 10),
+        Expanded(child: _StatBox(label: "Completed", value: "$completed")),
+      ],
+    );
+  }
+}
+
+class _StatBox extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool highlight;
+
+  const _StatBox({
+    required this.label,
+    required this.value,
+    this.highlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = highlight
+        ? AppColors.primary
+        : Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.45);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: highlight ? Colors.white : null,
+                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: highlight
+                      ? Colors.white70
+                      : Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                ),
+          ),
+        ],
       ),
     );
+  }
+}
+
+// ── Tournament Card ───────────────────────────────────────────────────────────
+
+class _TournamentCard extends StatelessWidget {
+  final Tournament tournament;
+  const _TournamentCard({required this.tournament});
+
+  @override
+  Widget build(BuildContext context) {
+    final dateLabel = _dateRange(tournament);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            color: AppColors.primarySurface,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Iconsax.cup, color: AppColors.primary, size: 20),
+        ),
+        title: Text(
+          tournament.name,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: dateLabel.isNotEmpty
+            ? Text(
+                dateLabel,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                    ),
+              )
+            : null,
+        trailing: StatusChip(statusKey: tournament.status),
+        onTap: () =>
+            Get.toNamed(AppRoutes.tournamentDetails, arguments: tournament),
+      ),
+    );
+  }
+
+  String _dateRange(Tournament t) {
+    if (t.startDate == null) return "";
+    final start = AppDateUtils.formatDayMonth(t.startDate!);
+    if (t.endDate == null) return start;
+    return "$start – ${AppDateUtils.formatDayMonth(t.endDate!)}";
   }
 }

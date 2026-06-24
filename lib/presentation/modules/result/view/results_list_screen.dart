@@ -45,14 +45,21 @@ class ResultsListScreen extends GetView<ResultController> {
                     validator: (val) => val == null ? "Required" : null,
                   );
                 }),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: controller.scoreSummaryController,
-                  decoration: const InputDecoration(
-                    labelText: "Score Summary (e.g. 2-1 or 150/4 - 148/8)",
-                  ),
-                  validator: (v) => v!.isEmpty ? "Required" : null,
-                ),
+                Obx(() {
+                  final fixture = controller.selectedFixture.value;
+                  if (fixture == null) return const SizedBox.shrink();
+
+                  final sType = fixture.sportType.toLowerCase();
+                  if (sType.contains("cricket")) {
+                    return _buildCricketForm(fixture);
+                  } else if (sType.contains("football")) {
+                    return _buildFootballForm(fixture);
+                  } else if (sType.contains("badminton")) {
+                    return _buildBadmintonForm(fixture);
+                  } else {
+                    return _buildGenericForm();
+                  }
+                }),
                 const SizedBox(height: 16),
                 const Align(
                   alignment: Alignment.centerLeft,
@@ -110,6 +117,164 @@ class ResultsListScreen extends GetView<ResultController> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCricketForm(Fixture fixture) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Text("${fixture.teamAName} Innings:", style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamARunsController,
+                decoration: const InputDecoration(labelText: "Runs"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamAWicketsController,
+                decoration: const InputDecoration(labelText: "Wkts"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamAOversController,
+                decoration: const InputDecoration(labelText: "Overs"),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Text("${fixture.teamBName} Innings:", style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamBRunsController,
+                decoration: const InputDecoration(labelText: "Runs"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamBWicketsController,
+                decoration: const InputDecoration(labelText: "Wkts"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamBOversController,
+                decoration: const InputDecoration(labelText: "Overs"),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFootballForm(Fixture fixture) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamAGoalsController,
+                decoration: InputDecoration(labelText: "${fixture.teamAName} Goals"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamBGoalsController,
+                decoration: InputDecoration(labelText: "${fixture.teamBName} Goals"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBadmintonForm(Fixture fixture) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamASetsController,
+                decoration: InputDecoration(labelText: "${fixture.teamAName} Sets Won"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: controller.teamBSetsController,
+                decoration: InputDecoration(labelText: "${fixture.teamBName} Sets Won"),
+                keyboardType: TextInputType.number,
+                validator: (v) => v!.isEmpty ? "Required" : null,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextFormField(
+          controller: controller.setScoresController,
+          decoration: const InputDecoration(
+            labelText: "Set Scores (e.g. 21-18, 19-21, 21-15)",
+            hintText: "Optional details",
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGenericForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: controller.scoreSummaryController,
+          decoration: const InputDecoration(
+            labelText: "Score Summary (e.g. 2-1 or 150/4 - 148/8)",
+          ),
+          validator: (v) => v!.isEmpty ? "Required" : null,
+        ),
+      ],
     );
   }
 

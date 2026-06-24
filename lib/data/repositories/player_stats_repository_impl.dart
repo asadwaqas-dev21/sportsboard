@@ -19,16 +19,18 @@ class PlayerStatsRepositoryImpl implements PlayerStatsRepository {
     required String tournamentId,
     String? sportType,
   }) {
-    Query query = _collection
-        .where("tournamentId", isEqualTo: tournamentId)
-        .orderBy("rankingPoints", descending: true);
+    Query query = _collection.where("tournamentId", isEqualTo: tournamentId);
     if (sportType != null && sportType.isNotEmpty) {
       query = query.where("sportType", isEqualTo: sportType);
     }
     return query.snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => PlayerStatsModel.fromFirestore(doc))
-              .toList(),
+          (snapshot) {
+            final list = snapshot.docs
+                .map((doc) => PlayerStatsModel.fromFirestore(doc))
+                .toList();
+            list.sort((a, b) => b.rankingPoints.compareTo(a.rankingPoints));
+            return list;
+          },
         );
   }
 

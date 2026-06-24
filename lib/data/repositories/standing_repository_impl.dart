@@ -18,12 +18,15 @@ class StandingRepositoryImpl implements StandingRepository {
   Stream<List<Standing>> getStandings(String tournamentId) {
     return _collection
         .where("tournamentId", isEqualTo: tournamentId)
-        .orderBy("points", descending: true)
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => StandingModel.fromFirestore(doc))
-              .toList(),
+          (snapshot) {
+            final list = snapshot.docs
+                .map((doc) => StandingModel.fromFirestore(doc))
+                .toList();
+            list.sort((a, b) => b.points.compareTo(a.points));
+            return list;
+          },
         );
   }
 

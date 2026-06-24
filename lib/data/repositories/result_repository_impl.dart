@@ -16,17 +16,26 @@ class ResultRepositoryImpl implements ResultRepository {
 
   @override
   Stream<List<Result>> getResults({String? tournamentId, int? limit}) {
-    Query query = _collection.orderBy("createdAt", descending: true);
+    Query query = _collection;
     if (tournamentId != null && tournamentId.isNotEmpty) {
       query = query.where("tournamentId", isEqualTo: tournamentId);
     }
-    if (limit != null) {
-      query = query.limit(limit);
-    }
     return query.snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => ResultModel.fromFirestore(doc))
-              .toList(),
+          (snapshot) {
+            final list = snapshot.docs
+                .map((doc) => ResultModel.fromFirestore(doc))
+                .toList();
+            list.sort((a, b) {
+              if (a.createdAt == null && b.createdAt == null) return 0;
+              if (a.createdAt == null) return 1;
+              if (b.createdAt == null) return -1;
+              return b.createdAt!.compareTo(a.createdAt!);
+            });
+            if (limit != null && list.length > limit) {
+              return list.sublist(0, limit);
+            }
+            return list;
+          },
         );
   }
 

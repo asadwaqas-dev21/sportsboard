@@ -16,14 +16,18 @@ class TeamRepositoryImpl implements TeamRepository {
 
   @override
   Stream<List<Team>> getTeams({String? tournamentId}) {
-    Query query = _collection.orderBy("name");
+    Query query = _collection;
     if (tournamentId != null && tournamentId.isNotEmpty) {
       query = query.where("tournamentId", isEqualTo: tournamentId);
     }
     return query.snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => TeamModel.fromFirestore(doc))
-              .toList(),
+          (snapshot) {
+            final list = snapshot.docs
+                .map((doc) => TeamModel.fromFirestore(doc))
+                .toList();
+            list.sort((a, b) => a.name.compareTo(b.name));
+            return list;
+          },
         );
   }
 

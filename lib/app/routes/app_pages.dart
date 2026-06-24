@@ -7,6 +7,7 @@ import "package:sportsboard/presentation/modules/auth/view/login_screen.dart";
 import "package:sportsboard/presentation/modules/home/binding/home_binding.dart";
 import "package:sportsboard/presentation/modules/home/view/home_screen.dart";
 import "package:sportsboard/presentation/modules/tournament/binding/tournament_binding.dart";
+import "package:sportsboard/domain/usecases/tournament/get_tournaments_usecase.dart";
 import "package:sportsboard/presentation/modules/tournament/view/tournaments_list_screen.dart";
 import "package:sportsboard/presentation/modules/team/binding/team_binding.dart";
 import "package:sportsboard/presentation/modules/team/view/teams_list_screen.dart";
@@ -93,7 +94,9 @@ abstract class AppPages {
     GetPage(
       name: AppRoutes.sportDetails,
       page: () => const SportDetailsScreen(),
-      binding: BindingsBuilder(() {}),
+      binding: BindingsBuilder(() {
+        Get.lazyPut(() => GetTournamentsUseCase(Get.find()));
+      }),
     ),
     GetPage(
       name: AppRoutes.tournamentDetails,

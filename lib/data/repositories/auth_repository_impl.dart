@@ -12,7 +12,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<String?> login(String email, String password) async {
     // Development bypass
-    if (email.trim() == "admin@test.com" && password == "admin123") {
+    if (email.trim() == "asadwaqas@gmail.com" && password == "553134") {
       _isMockLoggedIn = true;
       return "test_admin_uid";
     }

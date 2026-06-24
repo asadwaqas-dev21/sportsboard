@@ -16,7 +16,7 @@ class PlayerRepositoryImpl implements PlayerRepository {
 
   @override
   Stream<List<Player>> getPlayers({String? teamId, String? sportId}) {
-    Query query = _collection.orderBy("name");
+    Query query = _collection;
     if (teamId != null && teamId.isNotEmpty) {
       query = query.where("teamId", isEqualTo: teamId);
     }
@@ -24,9 +24,13 @@ class PlayerRepositoryImpl implements PlayerRepository {
       query = query.where("sportId", isEqualTo: sportId);
     }
     return query.snapshots().map(
-          (snapshot) => snapshot.docs
-              .map((doc) => PlayerModel.fromFirestore(doc))
-              .toList(),
+          (snapshot) {
+            final list = snapshot.docs
+                .map((doc) => PlayerModel.fromFirestore(doc))
+                .toList();
+            list.sort((a, b) => a.name.compareTo(b.name));
+            return list;
+          },
         );
   }
 
