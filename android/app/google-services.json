@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "941804631681",
+    "project_id": "sportsboard-d48ae",
+    "storage_bucket": "sportsboard-d48ae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941804631681:android:dfa08b9bebd0b4072d3f80",
+        "android_client_info": {
+          "package_name": "com.example.sportsboard"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZfUr4-nAZDyeKyhkdAgSbNbPFkQ4Y1xI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
