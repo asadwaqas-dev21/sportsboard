@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:google_fonts/google_fonts.dart";
 import "package:sportsboard/core/theme/app_colors.dart";
 
@@ -24,6 +25,11 @@ abstract class AppTheme {
         ),
         textTheme: _buildTextTheme(AppColors.textPrimaryLight),
         appBarTheme: AppBarTheme(
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
@@ -202,6 +208,11 @@ abstract class AppTheme {
         ),
         textTheme: _buildTextTheme(AppColors.textPrimaryDark),
         appBarTheme: AppBarTheme(
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.light,
+            statusBarBrightness: Brightness.dark,
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,

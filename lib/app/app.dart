@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:get/get.dart";
 import "package:sportsboard/app/bindings/app_binding.dart";
 import "package:sportsboard/app/routes/app_pages.dart";
@@ -14,15 +15,25 @@ class App extends StatelessWidget {
     return GetBuilder<ThemeController>(
       init: ThemeController(),
       builder: (themeController) {
-        return GetMaterialApp(
-          title: "SportsBoard",
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
-          themeMode: themeController.themeMode,
-          initialBinding: AppBinding(),
-          initialRoute: AppRoutes.splash,
-          getPages: AppPages.pages,
-          debugShowCheckedModeBanner: false,
+        final isDark = themeController.isDarkMode;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+            statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: isDark ? const Color(0xFF121212) : const Color(0xFFFFFFFF),
+            systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+          ),
+          child: GetMaterialApp(
+            title: "SportsBoard",
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeController.themeMode,
+            initialBinding: AppBinding(),
+            initialRoute: AppRoutes.splash,
+            getPages: AppPages.pages,
+            debugShowCheckedModeBanner: false,
+          ),
         );
       },
     );

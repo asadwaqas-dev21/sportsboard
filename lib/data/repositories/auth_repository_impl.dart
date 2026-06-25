@@ -1,19 +1,38 @@
 import "package:firebase_auth/firebase_auth.dart";
+import "package:shared_preferences/shared_preferences.dart";
 import "package:sportsboard/domain/repositories/auth_repository.dart";
 
-/// Firebase Auth implementation of AuthRepository.
+/// Firebase Auth implementation of AuthRepository with support for persistent mock sessions.
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _auth;
   bool _isMockLoggedIn = false;
 
   AuthRepositoryImpl({FirebaseAuth? auth})
-      : _auth = auth ?? FirebaseAuth.instance;
+      : _auth = auth ?? FirebaseAuth.instance {
+    _loadMockLoginState();
+  }
+
+  Future<void> _loadMockLoginState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isMockLoggedIn = prefs.getBool("is_mock_logged_in") ?? false;
+    } catch (_) {
+      // Gracefully catch potential SharedPreferences init errors
+    }
+  }
 
   @override
-  Future<String?> login(String email, String password) async {
+  Future<String?> login(String email, String password, {bool keepMeLoggedIn = false}) async {
     // Development bypass
     if (email.trim() == "asadwaqas@gmail.com" && password == "553134") {
       _isMockLoggedIn = true;
+      if (keepMeLoggedIn) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool("is_mock_logged_in", true);
+      } else {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove("is_mock_logged_in");
+      }
       return "test_admin_uid";
     }
 
@@ -23,6 +42,8 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
       );
       _isMockLoggedIn = false;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove("is_mock_logged_in");
       return credential.user?.uid;
     } on FirebaseAuthException catch (e) {
       throw Exception(e.message ?? "Login failed");
@@ -31,6 +52,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove("is_mock_logged_in");
+    
     if (_isMockLoggedIn) {
       _isMockLoggedIn = false;
       return;
@@ -46,8 +70,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Stream<bool> get authStateChanges {
-    // Note: To make mock stream work perfectly we'd need a StreamController,
-    // but for the MVP simply checking isLoggedIn will be enough for most UI.
     return _auth.authStateChanges().map((user) => _isMockLoggedIn || user != null);
   }
 }

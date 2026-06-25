@@ -43,20 +43,19 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text("Cancel"),
+          TextButton(onPressed: () => Get.back(), child: const Text("Cancel")),
+          Obx(
+            () => controller.isSaving.value
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : ElevatedButton(
+                    onPressed: () => controller.addTeam(),
+                    child: const Text("Add"),
+                  ),
           ),
-          Obx(() => controller.isSaving.value
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : ElevatedButton(
-                  onPressed: () => controller.addTeam(),
-                  child: const Text("Add"),
-                )),
         ],
       ),
     );
@@ -89,10 +88,12 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                     value: controller.selectedTeamA.value,
                     decoration: const InputDecoration(labelText: "Team A"),
                     items: controller.teams
-                        .map((team) => DropdownMenuItem(
-                              value: team,
-                              child: Text(team.name),
-                            ))
+                        .map(
+                          (team) => DropdownMenuItem(
+                            value: team,
+                            child: Text(team.name),
+                          ),
+                        )
                         .toList(),
                     onChanged: (val) => controller.selectedTeamA.value = val,
                     validator: (val) => val == null ? "Required" : null,
@@ -108,10 +109,12 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                     value: controller.selectedTeamB.value,
                     decoration: const InputDecoration(labelText: "Team B"),
                     items: controller.teams
-                        .map((team) => DropdownMenuItem(
-                              value: team,
-                              child: Text(team.name),
-                            ))
+                        .map(
+                          (team) => DropdownMenuItem(
+                            value: team,
+                            child: Text(team.name),
+                          ),
+                        )
                         .toList(),
                     onChanged: (val) => controller.selectedTeamB.value = val,
                     validator: (val) => val == null ? "Required" : null,
@@ -131,14 +134,16 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                     }
                   },
                   child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: "Match Date",
+                    decoration: const InputDecoration(labelText: "Match Date"),
+                    child: Obx(
+                      () => Text(
+                        controller.selectedDate.value == null
+                            ? "Select Date"
+                            : AppDateUtils.formatDayMonth(
+                                controller.selectedDate.value!,
+                              ),
+                      ),
                     ),
-                    child: Obx(() => Text(
-                          controller.selectedDate.value == null
-                              ? "Select Date"
-                              : AppDateUtils.formatDayMonth(controller.selectedDate.value!),
-                        )),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -153,9 +158,10 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                       context: context,
                       initialTime: TimeOfDay.now(),
                     );
-                    if (picked != null) {
-                      // ignore: use_build_context_synchronously
-                      controller.fixtureTimeController.text = picked.format(context);
+                    if (picked != null && context.mounted) {
+                      controller.fixtureTimeController.text = picked.format(
+                        context,
+                      );
                     }
                   },
                   validator: (v) => v!.isEmpty ? "Required" : null,
@@ -173,20 +179,19 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text("Cancel"),
+          TextButton(onPressed: () => Get.back(), child: const Text("Cancel")),
+          Obx(
+            () => controller.isSaving.value
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : ElevatedButton(
+                    onPressed: () => controller.addFixture(),
+                    child: const Text("Add"),
+                  ),
           ),
-          Obx(() => controller.isSaving.value
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : ElevatedButton(
-                  onPressed: () => controller.addFixture(),
-                  child: const Text("Add"),
-                )),
         ],
       ),
     );
@@ -227,12 +232,16 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                     return DropdownButtonFormField<Team>(
                       // ignore: deprecated_member_use
                       value: controller.standingSelectedTeam.value,
-                      decoration: const InputDecoration(labelText: "Select Team"),
+                      decoration: const InputDecoration(
+                        labelText: "Select Team",
+                      ),
                       items: controller.teams
-                          .map((team) => DropdownMenuItem(
-                                value: team,
-                                child: Text(team.name),
-                              ))
+                          .map(
+                            (team) => DropdownMenuItem(
+                              value: team,
+                              child: Text(team.name),
+                            ),
+                          )
                           .toList(),
                       onChanged: (val) {
                         controller.standingSelectedTeam.value = val;
@@ -241,18 +250,23 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                           final existing = controller.standings
                               .firstWhereOrNull((s) => s.teamId == val.id);
                           if (existing != null) {
-                            controller.standingPlayedController.text =
-                                existing.played.toString();
-                            controller.standingWonController.text =
-                                existing.won.toString();
-                            controller.standingLostController.text =
-                                existing.lost.toString();
-                            controller.standingDrawController.text =
-                                existing.draw.toString();
-                            controller.standingPointsController.text =
-                                existing.points.toString();
-                            controller.standingNrrController.text =
-                                existing.netRunRate.toString();
+                            controller.standingPlayedController.text = existing
+                                .played
+                                .toString();
+                            controller.standingWonController.text = existing.won
+                                .toString();
+                            controller.standingLostController.text = existing
+                                .lost
+                                .toString();
+                            controller.standingDrawController.text = existing
+                                .draw
+                                .toString();
+                            controller.standingPointsController.text = existing
+                                .points
+                                .toString();
+                            controller.standingNrrController.text = existing
+                                .netRunRate
+                                .toString();
                             controller.standingGoalsForController.text =
                                 existing.goalsFor.toString();
                             controller.standingGoalsAgainstController.text =
@@ -266,7 +280,9 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: controller.standingPlayedController,
-                    decoration: const InputDecoration(labelText: "Played (Matches)"),
+                    decoration: const InputDecoration(
+                      labelText: "Played (Matches)",
+                    ),
                     keyboardType: TextInputType.number,
                     validator: (v) => v!.isEmpty ? "Required" : null,
                   ),
@@ -299,7 +315,9 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                         Expanded(
                           child: TextFormField(
                             controller: controller.standingDrawController,
-                            decoration: const InputDecoration(labelText: "Draws"),
+                            decoration: const InputDecoration(
+                              labelText: "Draws",
+                            ),
                             keyboardType: TextInputType.number,
                             validator: (v) => v!.isEmpty ? "Required" : null,
                           ),
@@ -309,7 +327,9 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                       Expanded(
                         child: TextFormField(
                           controller: controller.standingPointsController,
-                          decoration: const InputDecoration(labelText: "Points"),
+                          decoration: const InputDecoration(
+                            labelText: "Points",
+                          ),
                           keyboardType: TextInputType.number,
                           validator: (v) => v!.isEmpty ? "Required" : null,
                         ),
@@ -320,8 +340,12 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                   if (isCricket)
                     TextFormField(
                       controller: controller.standingNrrController,
-                      decoration: const InputDecoration(labelText: "Net Run Rate (NRR)"),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        labelText: "Net Run Rate (NRR)",
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       validator: (v) => v!.isEmpty ? "Required" : null,
                     ),
                   if (isFootball) ...[
@@ -330,7 +354,9 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                         Expanded(
                           child: TextFormField(
                             controller: controller.standingGoalsForController,
-                            decoration: const InputDecoration(labelText: "Goals For (GF)"),
+                            decoration: const InputDecoration(
+                              labelText: "Goals For (GF)",
+                            ),
                             keyboardType: TextInputType.number,
                             validator: (v) => v!.isEmpty ? "Required" : null,
                           ),
@@ -338,15 +364,18 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextFormField(
-                            controller: controller.standingGoalsAgainstController,
-                            decoration: const InputDecoration(labelText: "Goals Against (GA)"),
+                            controller:
+                                controller.standingGoalsAgainstController,
+                            decoration: const InputDecoration(
+                              labelText: "Goals Against (GA)",
+                            ),
                             keyboardType: TextInputType.number,
                             validator: (v) => v!.isEmpty ? "Required" : null,
                           ),
                         ),
                       ],
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -356,16 +385,18 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
               onPressed: () => Get.back(),
               child: const Text("Cancel"),
             ),
-            Obx(() => controller.isSaving.value
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : ElevatedButton(
-                    onPressed: () => controller.addOrUpdateStanding(),
-                    child: const Text("Save"),
-                  )),
+            Obx(
+              () => controller.isSaving.value
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : ElevatedButton(
+                      onPressed: () => controller.addOrUpdateStanding(),
+                      child: const Text("Save"),
+                    ),
+            ),
           ],
         );
       },
@@ -417,7 +448,9 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
                   child: Text(
                     team.name.substring(0, 1).toUpperCase(),
                     style: TextStyle(
@@ -426,12 +459,17 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                     ),
                   ),
                 ),
-                title: Text(team.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: Text("Captain: ${team.captainName.isNotEmpty ? team.captainName : 'N/A'}"),
+                title: Text(
+                  team.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  "Captain: ${team.captainName.isNotEmpty ? team.captainName : 'N/A'}",
+                ),
                 trailing: const Icon(Icons.chevron_right, size: 20),
                 onTap: () {
                   // Navigate to players screen pre-filtered by team
-                  Get.toNamed("/players", arguments: {"teamId": team.id});
+                  Get.toNamed("/players", arguments: team);
                 },
               ),
             );
@@ -444,7 +482,8 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
   Widget _buildStandingsTab(BuildContext context) {
     return Scaffold(
       body: Obx(() {
-        if (controller.isLoadingStandings.value || controller.isLoadingTeams.value) {
+        if (controller.isLoadingStandings.value ||
+            controller.isLoadingTeams.value) {
           return const Center(child: CircularProgressIndicator());
         }
 
@@ -478,7 +517,11 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
                 Center(
                   child: Column(
                     children: [
-                      const Icon(Icons.leaderboard_outlined, size: 64, color: Colors.grey),
+                      const Icon(
+                        Icons.leaderboard_outlined,
+                        size: 64,
+                        color: Colors.grey,
+                      ),
                       const SizedBox(height: 16),
                       const Text(
                         "No standings available yet",
@@ -525,7 +568,11 @@ class TournamentDetailsScreen extends GetView<TournamentDetailsController> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 64, color: Colors.grey),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 64,
+                  color: Colors.grey,
+                ),
                 const SizedBox(height: 16),
                 const Text("No fixtures scheduled yet"),
                 if (controller.isAdmin) ...[

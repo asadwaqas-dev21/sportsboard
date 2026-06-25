@@ -5,7 +5,7 @@ class LoginUseCase {
 
   LoginUseCase(this.repository);
 
-  Future<String?> execute(String email, String password) {
-    return repository.login(email, password);
+  Future<String?> execute(String email, String password, {bool keepMeLoggedIn = false}) {
+    return repository.login(email, password, keepMeLoggedIn: keepMeLoggedIn);
   }
 }

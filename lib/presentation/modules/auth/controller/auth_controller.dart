@@ -15,6 +15,7 @@ class AuthController extends GetxController {
 
   final RxBool isLoading = false.obs;
   final RxBool obscurePassword = true.obs;
+  final RxBool keepMeLoggedIn = false.obs;
 
   @override
   void onClose() {
@@ -33,8 +34,9 @@ class AuthController extends GetxController {
     isLoading.value = true;
     try {
       await loginUseCase.execute(
-        emailController.text,
+        emailController.text.trim(),
         passwordController.text,
+        keepMeLoggedIn: keepMeLoggedIn.value,
       );
       SnackbarUtils.showSuccess("Logged in successfully");
       Get.offAllNamed(AppRoutes.home);

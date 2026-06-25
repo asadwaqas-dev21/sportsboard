@@ -38,8 +38,8 @@ class LoginScreen extends GetView<AuthController> {
                   Text(
                     "Sign in to manage sports",
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: AppColors.textSecondaryLight,
-                        ),
+                      color: AppColors.textSecondaryLight,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 48),
@@ -74,7 +74,29 @@ class LoginScreen extends GetView<AuthController> {
                       validator: Validators.password,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Obx(
+                        () => Checkbox(
+                          value: controller.keepMeLoggedIn.value,
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          onChanged: (val) {
+                            if (val != null) {
+                              controller.keepMeLoggedIn.value = val;
+                            }
+                          },
+                        ),
+                      ),
+                      Text(
+                        "Keep me logged in",
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
 
                   // Login Button
                   Obx(

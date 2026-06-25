@@ -11,6 +11,7 @@ class TournamentDetailsBinding extends Bindings {
     Get.lazyPut(() => CalculateStandingsUseCase(
       resultRepository: Get.find(),
       standingRepository: Get.find(),
+      fixtureRepository: Get.find(),
     ));
 
     Get.put(TournamentDetailsController(

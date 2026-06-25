@@ -17,10 +17,6 @@ class SplashController extends GetxController {
     // Artificial delay for splash animation
     await Future.delayed(const Duration(seconds: 2));
 
-    if (authRepository.isLoggedIn) {
-      Get.offAllNamed(AppRoutes.home);
-    } else {
-      Get.offAllNamed(AppRoutes.login);
-    }
+    Get.offAllNamed(AppRoutes.home);
   }
 }
